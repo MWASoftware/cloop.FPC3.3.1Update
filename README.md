@@ -1,6 +1,8 @@
 # Updated cloop for generating the Pascal Interface for FPC 3.3.x
 
-The reason for the proposed update is that future versions of the Free Pascal Compiler (3.3.1 onwards) change the object instance layout and hence break the current Firebird OO API interface. The proposed change is intended to rectify this with minimal change to user applications.
+cloop is provided with the Firebird source and is used to generate the OO API for C++, Pascal, etc. This is an updated version of cloop amending the generation of the Pascal API.
+
+The reason for the update is that future versions of the Free Pascal Compiler (3.3.1 onwards) change the object instance layout and hence break the current Firebird OO API interface. The proposed change is intended to rectify this with minimal change to user applications.
 The change adds a new field to the object instance layout immediately after the vmt pointer and before any user fields. It thus conflicts with the cloop assumption that the layout of an object instance is a vmt pointer following by the user fields. The object's vTable field is thus not where it is expected to be and any use of the Firebird OOAPI results in a crash.
 
 The purpose of this new field is for supporting a monitoring interface. It is understood that a similar function is being added to Delphi but using a “hidden field”. It is not clear if the same problem applies to Delphi. However, the proposed update is intended to work with both FPC and Delphi without making any assumptions about the object instance layout.
