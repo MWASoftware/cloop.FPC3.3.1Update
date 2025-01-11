@@ -1,16 +1,16 @@
 # Updated cloop for generating the Pascal Interface for FPC 3.3.x
 
-cloop is provided with the Firebird source and is used to generate the OO API for C++, Pascal, etc. This is an updated version of cloop amending the generation of the Pascal API.
+The "cloop" program is provided with the Firebird source and is used to generate the OO API bindings for C++, Pascal, etc. This is an updated version of cloop amending the generation of the Pascal API.
 
-The reason for the update is that future versions of the Free Pascal Compiler (3.3.1 onwards) changes the object instance layout and hence breaks the current Firebird OO API interface. This update is intended to rectify this with minimal change to user applications.
+The reason for the update is that future versions of the Free Pascal Compiler (3.3.1 onwards) change the object instance layout and hence breaks the current Firebird OO API interface. This update is intended to rectify this with minimal change to user applications.
 
 The change to the object instance layout adds a new field to the object instance layout immediately after the vmt pointer and before any user fields. It thus conflicts with the cloop assumption that the layout of an object instance is a vmt pointer following by the user fields. The object's vTable field is thus not where it is expected to be and any use of the Firebird OOAPI results in a crash.
 
 The purpose of this new field is for supporting a monitoring interface. It is understood that a similar function is being added to Delphi but using a “hidden field”. It is not clear if the same problem applies to Delphi. However, the proposed update is intended to work with both FPC and Delphi without making any assumptions about the object instance layout.
 
-This update has been tested with the Firebird Pascal API (fbintf) for both use of the services provided by the Firebird engThe reason for the proposed update is that future versions of the Free Pascal Compiler (3.3.1 onwards) change the object instance layout and hence break the current Firebird OO API interface. This update is intended to rectify this with minimal change to user applications. The generated Pascal unit is now packaged with fbintf.
+This update has been tested with the Firebird Pascal API (https://github.com/MWASoftware/fbintf) for both use of the services provided by the Firebird engine and UDFs. The generated Pascal unit is now packaged with fbintf.
 
-The proposed Pascal generator is a full rewrite of the previous version and, in summary:
+The updated Pascal generator is a full rewrite of the previous version and, in summary:
 
     1. The vTable structure is changed from a class hierarchy to a record declaration for each interface. The change to a record is to avoid any dependencies on the object instance layout. However, record definitions do not support inheritance and hence each vTable declaration has to be “complete” i.e. it comprises: a null pointer, followed by a version number and then a pointer to each method starting with the top level interface. 
 
@@ -20,8 +20,9 @@ The result is arguably an improvement given that, unlike classes, record variabl
 
     3. The “implementation classes” are still classes with abstract methods but form their own inheritance hierarchy independent of the “interfaces” (e.g. IMasterImpl becomes a subclass of IVersionedImpl and not IMaster). These classes are abstract classes and hence could not be implemented as records. The class declaration defines two fields: a null pointer followed by a pointer to the implementation vTable as assigned by the class constructor.
 
-    4. Implicit type coercions between implementations (e.g. IMasterImpl instances) and interfaces (IMaster) is no longer possible and an explicit coercion is necessary. Each “implementation” class declaration includes such a coercion. For example, the class declaration for IMasterImpl includes
-function.asIMaster: IMaster
+    4. Implicit type coercions between implementations (e.g. IMasterImpl instances) and interfaces (IMaster) is no longer possible and an explicit coercion is necessary. Each “implementation” class declaration includes such a coercion. For example, the class declaration for IMasterImpl includes 
+
+function IMasterImpl.asIMaster: IMaster
 
 The implementation of this function simply returns a pointer to the object's null pointer field coerced to the appropriate interface pointer e.g.
 
